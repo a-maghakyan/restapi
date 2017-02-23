@@ -1,0 +1,668 @@
+<?php 
+session_start();
+/**
+ * A simple RESTful webservices base class
+ * Use this as a template and build upon it
+ */
+class RestFulApi {
+
+	/**
+	 * Host name
+	 * @var string
+	 */
+	private $host;
+	
+	/**
+	 * Database name
+	 * @var string
+	 */
+    private $dbname;
+    
+    /**
+     * Database user name
+     * @var string
+     */
+    private $user;
+
+    /**
+     * Database password
+     * @var integer
+     */
+    private $password;
+
+    /**
+     * Connection
+     * @var resours
+     */
+    private $dbh;
+	
+	/**
+	 * Accept type $requestContentType
+	 * @var string
+	 */
+	private $requestContentType;
+
+	/**
+	 * @var string
+	 */
+	private $httpVersion;
+
+	/**
+	 * @var integer
+	 */
+	private $ActiveFlag;
+
+    public function __construct() {
+    	$this->requestContentType = $_SERVER['HTTP_ACCEPT'];
+    	$this->httpVersion        = "HTTP/1.1";
+    	$this->host               = 'localhost';
+    	$this->dbname             = 'u608553329_api';
+    	$this->user               = 'u608553329_api';
+    	$this->password           = 123456;
+    	$this->ActiveFlag		  = 1;
+    	
+    	/**
+    	 * Connect to Database
+    	 */
+        $this->dbh = new mysqli($this->host, $this->user, $this->password, $this->dbname);
+		if ($this->dbh->connect_errno) {
+		    echo "Failed to connect to MySQL: (" . $this->dbh->connect_errno . ") " . $this->dbh->connect_error;
+		}      
+    }
+
+    /**
+     * Close Database connection
+     */
+    public function __destruct() {
+       $this->dbh->close();
+    }
+
+    /**
+     * Create New User
+     */
+    public function CreateUser(){
+    	echo $_POST['firstname'];die;
+		$firstname   = $this->escapeString($_POST['firstname']);
+		$lastname    = $this->escapeString($_POST['lastname']);
+		$password    = $this->escapeString($_POST['password']);
+		$email       = $this->escapeString($_POST['email']);
+		$phone 	     = $this->escapeString($_POST['phone']);
+		$language    = $this->escapeString($_POST['language']);
+		$countryId   = intval($this->escapeString($_POST['countryId']));
+		$imagePath   = $this->escapeString($_POST['imagePath']);
+		$verifyToken = substr(md5(mt_rand()),0,30);
+		echo $firstname;die;
+		if(empty($firstname) or empty($lastname) or empty($password) or empty($email) or empty($phone) or empty($countryId) or empty($imagePath)){
+            $response = array('status' => "Fill all fields.");
+            $statusCode = 400;
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+		else {
+			//Check other inputs
+			if(empty($language) or strlen($language) != 2){
+				$language = "EN";
+			}
+
+			//Check if email or phone already exists
+			$result = $this->dbh->query("SELECT * FROM `User` WHERE `Email` = '$email' or `Phone` = '$phone'");
+			
+			$rowcount = $this->dbh->affected_rows;
+			
+			if($rowcount > 0){
+    			$response = array('status' => "This email or phnoe already exists.");
+                $statusCode = 400;
+                $this->send_XML_JSON($response, $this->requestContentType, $statusCode);			
+			}
+			else{   				
+				//Hashing password
+				$password_hash = password_hash($password, PASSWORD_DEFAULT);
+				$addUser = $this->dbh->query("INSERT INTO `User`(`FirstName`, `LastName`,`Password`, `Email`, `Phone`, `ProfileImagePath`, `CountryID`, `Language`,	`VerifyToken`) 
+					VALUES ('$firstname', '$lastname', '$password_hash', '$email', '$phone', '$imagePath', $countryId,'$language', '$verifyToken')");
+
+    				if($addUser){
+    					//Get Email
+    					$userId   = $this->dbh->insert_id;
+						$query    = $this->dbh->query("SELECT `Email` FROM `User` WHERE `UserID` = $userId");
+						$response = $query->fetch_assoc();
+						$email    = $response['Email'];	
+	    				
+	    				//Send Email
+						$this->sendEmail($email,$verifyToken);die;
+
+    					// $response = array('status' => "Please check your email for verification.");
+	        //         	$statusCode = 200;
+	        //         	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);		
+				}
+			}   						
+		}
+    }
+
+    /**
+     * Activate User
+     * @param string $verifyToken
+     */
+    public function ActivateUser(){
+    	$verifyToken = $this->escapeString($_POST['verifyToken']);
+
+		$result = $this->dbh->query("UPDATE `User` SET `ActiveFlag`= $this->ActiveFlag 
+									 WHERE `VerifyToken`='$verifyToken'");
+		$result = $this->dbh->affected_rows;
+		
+		if($result > 0){
+			//Get UserID
+			$query     = $this->dbh->query("SELECT `UserID` FROM `User` WHERE `VerifyToken` = '$verifyToken'");
+			
+			$response = $query->fetch_assoc();
+            $statusCode = 200;
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);			
+		}
+		else {
+			$response = array('status' => "Error activation.");
+            $statusCode = 400;
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+		}		
+    }
+
+    /**
+     * Send same random token key to current user’s email for activation 
+     */
+    public function ResendKeyActivateUser(){
+    	$UserID = intval($this->escapeString($_POST['userID']));
+  		
+  		if($UserID != 0){
+  			//Check if UserID exists
+  			$query  = $this->dbh->query("SELECT * FROM `User` 
+										 WHERE `UserID` = $UserID");
+			$result = $this->dbh->affected_rows;
+			
+			
+			if($result > 0){
+	    		//Get VerifyToken and Email 
+				$query  = $this->dbh->query("SELECT `VerifyToken`, `Email` FROM `User` 
+											 WHERE `UserID` = $UserID AND `ActiveFlag` != $this->ActiveFlag");
+				$result = $this->dbh->affected_rows;
+				
+				if($result > 0){
+					$response = mysqli_fetch_all($query,MYSQLI_ASSOC);
+					$verifyToken  = $response[0]['VerifyToken'];
+					$email 		  = $response[0]['Email'];
+					
+					//Send email
+					$this->sendEmail($email,$verifyToken);die;	
+
+			    // $response = array('status' => "Please check your email for verification.");
+        //         	$statusCode = 200;
+        //         	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+				}
+				else{
+					$statusCode = 200;
+					$response = array('status' => "User is activated arlady.");
+		            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+				}
+			}	
+			else{
+				$statusCode = 400;
+				$response = array('status' => "UserID do not found.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+			}	
+    	}	
+    	else {
+    		$statusCode = 400;
+			$response = array('status' => "UserID can not be 0.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+    	}
+    }
+
+    /**
+     * User Authorization
+     */
+    public function UserAuth(){
+    	$userID   = intval($this->escapeString($_POST['userID']));
+    	$password = $this->escapeString($_POST['password']);
+
+    	$query = $this->dbh->query("SELECT `Password` FROM `User` 
+									WHERE `UserID` = $userID 
+									AND `ActiveFlag` = $this->ActiveFlag");
+		$result = $this->dbh->affected_rows;
+		
+		if($result > 0){
+			$response = $query->fetch_assoc();
+			$hash = $response['Password'];
+
+			if(password_verify($password, $hash)){
+				$statusCode = 200;
+				$response = array('status' => "User logged in successfully.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+    		}
+    		else{
+    			$statusCode = 400;
+				$response = array('status' => "Login failed.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+    		}		
+		}
+		else {
+    		$statusCode = 400;
+			$response = array('status' => "Login failed.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+    }
+
+    /**
+     * Update User Information 
+     */
+    public function UpdateUserInfo(){
+    	parse_str(file_get_contents("php://input"),$updateData);
+    	$userId = intval($this->escapeString($updateData['userinfo']['userID']));
+    	
+    	if($userId != 0){
+	    	$sql   = "UPDATE `User` SET";
+			$comma   = " ";
+			$updateList = array(
+			    "firstName" => "`FirstName`",
+			    "lastName"  => "`LastName`",
+			    "phoneNo"   => "`Phone`",
+			    "image"     => "`ProfileImagePath`",
+			    "country"   => "`CountryID`",
+			    "language"  => "`Language`"
+			);
+			
+			foreach($updateData['userinfo'] as $key => $value) {
+			    if( ! empty($value) && array_key_exists($key, $updateList)) {
+			       $sql .= $comma . $updateList[$key] . " = '" . $this->escapeString($value) . "'";		       
+			       $comma = ", ";		        
+			    }
+			}
+
+			$comma = " ";
+			$sql .= $comma."WHERE `UserID` = $userId";
+			
+			$query  = $this->dbh->query($sql);
+			$result = $this->dbh->affected_rows;
+		
+			if($result > 0){
+				$statusCode = 200;
+				$response = array('status' => "Selected fields updated successfully.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+			} 
+			else {
+				$statusCode = 400;
+				$response = array('status' => "Check phone number or language format (EN,RU).");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+			}	
+    	}
+    	else {
+    		$statusCode = 400;
+			$response = array('status' => "UserID can not be 0.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+    	}
+    } 
+
+    /**
+     * Get current user info for menu 
+     */
+    public function GetUserInfoForMenu(){
+		$userId = intval($this->escapeString($_GET['id']));
+		$query = $this->dbh->query("SELECT `FirstName`, `LastName`, `ProfileImagePath`, `CountryName` 
+									FROM `User`,`Country` 
+									WHERE `UserID` = $userId AND `User`.`CountryID` = `Country`.`CountryID`");
+		$result = $this->dbh->affected_rows;
+		if($result > 0){
+			$result = $query->fetch_assoc();
+			$response = $this->mergeName($result);
+			
+			$statusCode = 200;
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+		else {
+			$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+    }
+
+    /**
+     * Get User Detail Information 
+     */
+    public function GetUserDetailInfo(){
+    	$query = $this->dbh->query("SELECT `FirstName`, `LastName`, `ProfileImagePath`, `CountryName`, `Email`, `Phone` FROM `User`,`Country` WHERE `User`.`CountryID` = `Country`.`CountryID`");
+
+		$result = $this->dbh->affected_rows;
+		
+		if($result > 0){
+			$result = array();
+			while($row = $query->fetch_assoc()){
+    			$result[] = $row;
+			}
+			$response = $this->mergeName($result);
+
+			$statusCode = 200;
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+		else {
+			$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+    }
+
+    /**
+     * Show all brand image
+     */
+    public function GetAllBrand(){
+    	$query = $this->dbh->query("SELECT `BrandImagePath` FROM `Brand`");
+		$result = $this->dbh->affected_rows;
+		
+		if($result > 0){
+			$response = array();
+			while($row = $query->fetch_assoc()){
+    			$response[] = $row;
+			}
+			$statusCode = 200;
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+		else {
+			$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}  	
+    }
+
+    /**
+     * Search Products By Text
+     */
+    public function SearchProductsByText(){
+    	$serachText = $this->escapeString($_POST['serachText']);
+    	$offset     = intval($this->escapeString($_POST['offset']));
+    	$limit      = intval($this->escapeString($_POST['limit']));
+    	echo $limit." ".$offset." ".$serachText;die; 
+    	
+    	if($serachText != '' or !empty($serachText)){
+	    	$condition = "`IsPublished` = 1 AND `IsApproved` = 1 AND `LoyaltyRewardOnly` = 0 AND (`StockCount` > 0 OR `IsStockCount` = 0)";
+	    	$comma = " ";
+	    	$query = $this->dbh->query("SELECT `ProductName`, `ProductPrice`, `ProductCurrency`, `ProductSummaryDescription`,`FeatureImagePath` FROM `Product` WHERE `ProductName` LIKE '%$serachText%' AND".$comma.$condition.$comma."LIMIT $limit OFFSET $offset");
+			$result = $this->dbh->affected_rows;
+			
+			if($result > 0){
+				// $response = mysqli_fetch_all($query,MYSQLI_ASSOC);
+				$response = array();
+				while($row = $query->fetch_assoc()){
+	    			$response[] = $row;
+				}
+				$statusCode = 200;
+	            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+			}
+			else {
+				$query = $this->dbh->query("SELECT `ProductName`, `ProductPrice`, `ProductCurrency`, `ProductSummaryDescription`,`FeatureImagePath` FROM `Product` WHERE `ProductName` NOT LIKE '%$serachText%' AND (`ProductSummaryDescription` LIKE '%$serachText%' OR `ProductDetailDescription` LIKE '%$serachText%') AND".$comma.$condition.$comma."LIMIT $limit OFFSET $offset");
+				$result = $this->dbh->affected_rows;
+				if($result > 0){
+					// $response = mysqli_fetch_all($query,MYSQLI_ASSOC);
+					$response = array();
+					while($row = $query->fetch_assoc()){
+		    			$response[] = $row;
+					}
+					$statusCode = 200;
+		            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+				}
+				else {
+					$statusCode = 400;
+					$response = array('status' => "Nothing found.");
+		            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);		
+				}
+			}
+		}
+		else{
+			$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+    }
+
+    /**
+     * Get Product Detail information
+     */
+    public function GetProductDetail(){
+    	$productID = intval($this->escapeString($_GET['id']));
+    	
+    	if($productID != 0 or !empty($productID)){
+    		$condition = "`ProductID` = $productID AND `IsPublished` = 1 AND `IsApproved` = 1 AND `LoyaltyRewardOnly` = 0 AND (`StockCount` > 0 OR `IsStockCount` = 0)";
+	    	$comma = " ";
+
+    		$query = $this->dbh->query("SELECT `ProductName`, `ProductPrice`, `FeatureImagePath`, `ProductDetailDescription`, `ProductTermsAndConditions`, `StockCount` FROM `Product` WHERE".$comma.$condition.$comma);
+			$result = $this->dbh->affected_rows;
+			
+			if($result > 0){
+				$response = $query->fetch_assoc();
+				$statusCode = 200;
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+			}
+			else {
+				$statusCode = 400;
+				$response = array('status' => "Nothing found.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+			}
+    	}
+    	else {
+    		$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+    	}
+    }
+
+    /**
+     * Merge firstName and lastName
+     * @param $array 
+     * @return array 
+     */
+    public function mergeName($array){   	
+    	if( ! $this->isMultiArray($array)){
+    		$response = array("fullName" => "");
+			foreach($array as $key => $val){
+			    if($key == "FirstName" or $key == "LastName"){
+			        $response["fullName"] .= $val." ";
+			    }
+			    else{
+			       $response[$key] .= $val; 
+			    }
+			}
+    		return $response;
+    	}
+    	else {
+    		$response = array();
+    		$insideResponse = array("fullName" => '');
+    		foreach ($array as $value) {
+	    		foreach($value as $key => $val){
+				    if($key == "FirstName" or $key == "LastName"){
+				        $insideResponse["fullName"] .= $val." ";				        
+				    }
+				    else{
+				       	$insideResponse[$key] .= $val; 
+				    }	    
+				}
+				$response[] = $insideResponse;
+			    $insideResponse = array();
+			}
+			return $response;  		
+    	}
+    }
+
+    /**
+     * Send Email
+     * @return boolean
+     */
+    public function sendEmail($email,$verifyToken){
+	    $to      = $email;
+	    $subject = "Complate registration for Site name.";
+	    $from    = 'example@gmail.com';
+	    $message = 'For completing the registration please click on active URL <a href=/verify.php?verifyToken='.$verifyToken.'>Click here</a> .';
+	    $headers = "From: <".$from.">";
+	    // mail($to,$subject,$message,$headers);
+	    echo $headers."<br>".$subject."<br>".$message;
+    }
+
+    /**
+     * Escapes special characters in a string for use in an SQL statement:
+     * Convert the predefined characters "<" (less than) and ">" (greater than) to HTML entities:
+     * Remove spaces
+     * @param string 
+     * @return string
+     */
+    public function escapeString($string){
+    	return mysqli_real_escape_string($this->dbh, htmlspecialchars(trim($string)));
+    }
+
+	/**
+	 * Cehck if mthod exists
+	 * @param string $method
+	 */
+	public function ErrorMessage($method){
+		echo json_encode(array("ErrorMessage"=>$method." mothod doesn't exists."));
+	}
+
+	// /**
+	//  * [GetFrontPageSlideShowProducts description]
+	//  * @param integer $id 
+	//  */
+	// public function GetFrontPageSlideShowProducts($id){
+	// 	if($id != 0){
+	// 		$query    = $this->dbh->query("SELECT * FROM test WHERE `id`=$id");
+	// 		$products = mysqli_fetch_all($query,MYSQLI_ASSOC);
+			
+	//    		if(empty($products)){
+	//    			$statusCode = 400;	
+	// 			$products = array('status' => 'No products found.','statusCode' => $statusCode);	
+	//    		} 
+	// 		else {
+	// 			$statusCode = 200;
+	// 		}
+
+	// 		$this->send_XML_JSON($products, $this->requestContentType, $statusCode);	
+	// 		$query->free();
+	// 	}
+	// 	else {
+	//    		$statusCode = 400;	
+	// 		$errorMessage = array("ErrorMessage" => '$UserID must not be 0.',"statusCode" => $statusCode);	
+	// 		$this->send_XML_JSON($errorMessage, $this->requestContentType, $statusCode);	
+	// 	}
+	// }
+
+	/**
+	 * @param  array $responseData  
+	 * @return json               
+	 */
+	public function encodeJson($responseData) {
+		$jsonResponse = json_encode($responseData);
+		return $jsonResponse;		
+	}
+
+	/**
+	 * @param  array $responseData 
+	 * @return xml
+	 */
+	public function encodeXml($responseData) {
+		$xml = '<?xml version="1.0" encoding="UTF-8"?>';
+		$xml .= "<products>";
+
+		if($this->isMultiArray($responseData)){
+			foreach($responseData as $val) {
+				foreach ($val as $key => $value) {
+		            $xml .= "<".$key.">";
+		            $xml .= $value;
+		            $xml .= "</".$key.">";
+				}
+	    	}	
+		}
+		else{				
+			foreach($responseData as $key=>$value) {
+	            $xml .= "<".$key.">";
+	            $xml .= $value;
+	            $xml .= "</".$key.">";
+		    }
+		}
+		$xml .= "</products>";		
+		return $xml;		
+	}
+
+	/**
+	 * Create JSON or XML
+	 * @param  array $response           
+	 * @param  accept type $requestContentType 
+	 * @param  code status $statusCode 
+	 * @return JSON or XML                     
+	 */
+	public function send_XML_JSON($response, $requestType, $statusCode){
+
+		$this ->setHttpHeaders($requestType, $statusCode);
+		if(strpos($requestType,'application/json') !== false){
+			$outResponse = $this->encodeJson($response);
+			echo $outResponse;			
+		} 
+        else if(strpos($requestType,'application/xml') !== false){
+			$outResponse = $this->encodeXml($response);
+			echo $outResponse;			
+		}
+	}
+
+	/**
+	 * Check if array is multidimensional
+	 * @param  array  $array
+	 * @return boolean
+	 */
+	public function isMultiArray($array){
+		$checkArray = array_filter($array,'is_array');
+    	if(count($checkArray) > 0) return true;
+	}
+
+	public function setHttpHeaders($contentType, $statusCode){		
+		$statusMessage = $this -> getHttpStatusMessage($statusCode);
+		
+		header($this->httpVersion." ". $statusCode ." ". $statusMessage);		
+		header("Content-Type:". $contentType);
+	}
+	
+	public function getHttpStatusMessage($statusCode){
+		$httpStatus = array(
+			100 => 'Continue',  
+			101 => 'Switching Protocols',  
+			200 => 'OK',
+			201 => 'Created',  
+			202 => 'Accepted',  
+			203 => 'Non-Authoritative Information',  
+			204 => 'No Content',  
+			205 => 'Reset Content',  
+			206 => 'Partial Content',  
+			300 => 'Multiple Choices',  
+			301 => 'Moved Permanently',  
+			302 => 'Found',  
+			303 => 'See Other',  
+			304 => 'Not Modified',  
+			305 => 'Use Proxy',  
+			306 => '(Unused)',  
+			307 => 'Temporary Redirect',  
+			400 => 'Bad Request',  
+			401 => 'Unauthorized',  
+			402 => 'Payment Required',  
+			403 => 'Forbidden',  
+			404 => 'Not Found',  
+			405 => 'Method Not Allowed',  
+			406 => 'Not Acceptable',  
+			407 => 'Proxy Authentication Required',  
+			408 => 'Request Timeout',  
+			409 => 'Conflict',  
+			410 => 'Gone',  
+			411 => 'Length Required',  
+			412 => 'Precondition Failed',  
+			413 => 'Request Entity Too Large',  
+			414 => 'Request-URI Too Long',  
+			415 => 'Unsupported Media Type',  
+			416 => 'Requested Range Not Satisfiable',  
+			417 => 'Expectation Failed',  
+			500 => 'Internal Server Error',  
+			501 => 'Not Implemented',  
+			502 => 'Bad Gateway',  
+			503 => 'Service Unavailable',  
+			504 => 'Gateway Timeout',  
+			505 => 'HTTP Version Not Supported');
+		return ($httpStatus[$statusCode]) ? $httpStatus[$statusCode] : $status[500];
+	}
+}
+?>

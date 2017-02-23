@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">	
+</head>
+<body>
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">User Functions1:</div>
+  <div class="panel-body">
+  	<div class="col-md-8">
+		<form >	
+			<label for="InputName">CreateUser</label>
+			<div class="form-group">
+				<label for="InputName">First Name</label>
+				<input type="text" name="firstname" id="firstName" class="form-control" placeholder="Enter first name here..." >
+			</div>
+
+			<div class="form-group">
+				<label for="InputName1">Last Name</label>
+				<input type="text" name="lastname" id="lastName" class="form-control" placeholder="Enter last name here..." >
+			</div>
+
+			<div class="form-group">
+				<label for="InputPassword">Password</label>
+				<input type="password" name="password" id="password" class="form-control" placeholder="Enter password here..." >
+			</div>
+
+			<div class="form-group">
+				<label for="exampleInputEmail1">Email </label>
+				<input type="email" name="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Enter email" >
+				<small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+			</div>
+
+			<div class="form-group">
+				<label for="InputPhone">Phone</label>
+				<input type="text" name="phone" id="phone" class="form-control" placeholder="Enter phone here...">
+			</div>
+
+			<div class="form-group">
+				<label for="InputLanguage">Language</label>
+				<input type="text" name="language" id="language" class="form-control" placeholder="Enter language here..." aria-describedby="LanguageHelp">
+				<small id="LanguageHelp" class="form-text text-muted">Accepted format "EN" "RU" . Default EN(english)</small>
+			</div>
+
+			<div class="form-group">
+				<label for="InputCountry">CountryID</label>
+				<input type="number" name="countryId" id="countryId" class="form-control" placeholder="Enter countryId here..." >
+			</div>
+
+			<div class="form-group">
+				<label for="InputImagePath">Image Path</label>
+				<input type="text" name="image" id="imagePath" class="form-control" placeholder="Enter image path here..." >
+			</div>
+
+		</form>
+		<button name='submit' id="createUser" class="btn btn-primary">Add</button>
+	</div>
+  </div>
+  <div class="panel-body" id="createResult"></div>
+</div>
+<div class="clearfix"></div>
+<hr>
+	<div class="col-md-6 col-lg-6">
+		<div class="form-group">
+			<label for="InputName">ResendKeyActivateUser</label>
+			<input type='number' id="userID" class="form-control" placeholder="Enter UserId here..." >
+			<button class="btn btn-primary" id='ResendKey'>ResendKeyActivateUser</button>
+		</div>
+			<div class="col-md-6 col-lg-6" id="showResendKey"></div>
+	</div>
+<hr>
+<div class="clearfix"></div>
+<hr>
+	<div class="col-md-6 col-lg-6">
+		<div class="form-group">
+			<label for="InputName">UserAuth</label>
+			<input type='number' id="userIdVal" class="form-control" placeholder="Enter UserId here..." >
+			<input type='password' id="passVal" class="form-control" placeholder="Enter Password here..." >
+			<button class="btn btn-primary" id='UserAuth'>UserAuth</button>
+		</div>
+			<div class="col-md-6 col-lg-6" id="showUserAuth"></div>
+	</div>
+<hr>
+<div class="clearfix"></div>
+<hr>
+
+<div class="col-md-8">
+	<form >	
+		<label for="InputName">UpdateUserInfo</label><br>
+
+		<label for="InputName">UserID</label>
+		<input type='number' id="userIDUpdate" class="form-control" placeholder="Enter UserId here..." >
+	
+		<label for="InputName">First Name</label>
+		<input type="text" name="firstname" id="firstNameUpdate" class="form-control" placeholder="Enter first name here...">
+		
+		<label for="InputName1">Last Name</label>
+		<input type="text" name="lastname" id="lastNameUpdate" class="form-control" placeholder="Enter last name here..." >
+				
+		<label for="InputPhone">Phone</label>
+		<input type="text" name="phone" id="phoneUpdate" class="form-control" placeholder="Enter phone here...">
+				
+		<label for="InputLanguage">Language</label>
+		<input type="text" name="language" id="languageUpdate" class="form-control" placeholder="Enter language here...">
+	
+		<label for="InputCountry">CountryID</label>
+		<input type="number" name="countryId" id="countryIdUpdate" class="form-control" placeholder="Enter countryId here...">			
+	
+		<label for="InputImagePath">Image Path</label>
+		<input type="text" name="image" id="imagePathUpdate" class="form-control" placeholder="Enter image path"> 
+	</form>
+	<button name='submit' id="updateUser" class="btn btn-primary">Update</button>
+	<div class="clearfix"></div>
+	<div class="col-md-6 col-lg-6" id="showUserUpdate"></div>
+</div>
+<div class="clearfix"></div>
+
+<hr>
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">GET Functions:GetUserInfoForMenu($UserID), GetUserDetailInfo, GetAllBrand, GetProductDetail($ProductID)</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>http://example.com/api/</label>
+			<input type="text" class="form-control method-name" placeholder="MethodName" required>
+		</div>
+		<div class="form-group">
+			<label>/</label>
+			<input type="number" class="form-control method-id" placeholder="$ID">
+		</div>
+	</form>
+	<button id="send-get" class="btn btn-default">Send</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-result">
+  	<!-- Show Result -->
+
+  </div>
+</div>
+
+<hr>
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">Shop Functions:SearchProductsByText</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>Serach text</label>
+			<input type="text" class="form-control " id="serachtext" placeholder="Serach Text" required>
+		</div>
+		<div class="form-group">
+			<label>Offset</label>
+			<input type="number" class="form-control " id="offset" placeholder="Offset">
+		</div>
+		<div class="form-group">
+			<label>Limit</label>
+			<input type="number" class="form-control " id="limit" placeholder="Limit" value="10">
+		</div>
+	</form>
+	<button id="search" class="btn btn-default">Search</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="search-result">
+  	<!-- Show Result -->
+
+  </div>
+</div>
+	<script src="app.js"></script>
+</body>
+</html>
