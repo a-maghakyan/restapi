@@ -1,5 +1,8 @@
 # Turn on the rewriting engine
 RewriteEngine On
-RewriteRule ^api/?$ index.php [NC,L]
-RewriteRule ^api/([a-zA-Z]+)/?$ http://armdeveloper.hol.es/restexample/index.php?method=$1 [NC,L]
-RewriteRule ^api/([a-zA-Z]+)/?([0-9]+)?/?$ http://armdeveloper.hol.es/restexample/index.php?method=$1&id=$2 [NC,L]
+RewriteBase /
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/([a-zA-Z]+)/?$ restexample/index.php?method=$1 [L]
+RewriteRule ^api/([a-zA-Z]+)/?([0-9]+)?/?$ restexample/index.php?method=$1&id=$2 [L]

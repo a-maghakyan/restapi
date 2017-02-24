@@ -56,8 +56,8 @@ class RestFulApi {
     	$this->requestContentType = $_SERVER['HTTP_ACCEPT'];
     	$this->httpVersion        = "HTTP/1.1";
     	$this->host               = 'localhost';
-    	$this->dbname             = 'u608553329_api';
-    	$this->user               = 'u608553329_api';
+    	$this->dbname             = 'rest_api';
+    	$this->user               = 'root';
     	$this->password           = 123456;
     	$this->ActiveFlag		  = 1;
     	
@@ -81,7 +81,6 @@ class RestFulApi {
      * Create New User
      */
     public function CreateUser(){
-    	echo $_POST['firstname'];die;
 		$firstname   = $this->escapeString($_POST['firstname']);
 		$lastname    = $this->escapeString($_POST['lastname']);
 		$password    = $this->escapeString($_POST['password']);
@@ -91,7 +90,7 @@ class RestFulApi {
 		$countryId   = intval($this->escapeString($_POST['countryId']));
 		$imagePath   = $this->escapeString($_POST['imagePath']);
 		$verifyToken = substr(md5(mt_rand()),0,30);
-		echo $firstname;die;
+
 		if(empty($firstname) or empty($lastname) or empty($password) or empty($email) or empty($phone) or empty($countryId) or empty($imagePath)){
             $response = array('status' => "Fill all fields.");
             $statusCode = 400;
@@ -119,19 +118,19 @@ class RestFulApi {
 				$addUser = $this->dbh->query("INSERT INTO `User`(`FirstName`, `LastName`,`Password`, `Email`, `Phone`, `ProfileImagePath`, `CountryID`, `Language`,	`VerifyToken`) 
 					VALUES ('$firstname', '$lastname', '$password_hash', '$email', '$phone', '$imagePath', $countryId,'$language', '$verifyToken')");
 
-    				if($addUser){
-    					//Get Email
-    					$userId   = $this->dbh->insert_id;
-						$query    = $this->dbh->query("SELECT `Email` FROM `User` WHERE `UserID` = $userId");
-						$response = $query->fetch_assoc();
-						$email    = $response['Email'];	
-	    				
-	    				//Send Email
-						$this->sendEmail($email,$verifyToken);die;
-
-    					// $response = array('status' => "Please check your email for verification.");
-	        //         	$statusCode = 200;
-	        //         	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);		
+				if($addUser){
+					//Get Email
+					$userId   = $this->dbh->insert_id;
+					$query    = $this->dbh->query("SELECT `Email` FROM `User` WHERE `UserID` = $userId");
+					$response = $query->fetch_assoc();
+					$email    = $response['Email'];	
+    				
+    				//Send Email
+					$this->sendEmail($email,$verifyToken);
+					
+					$response   = array('status' => "Please check your email for verification.");
+                	$statusCode = 200;
+                	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);		    	
 				}
 			}   						
 		}
@@ -150,7 +149,7 @@ class RestFulApi {
 		
 		if($result > 0){
 			//Get UserID
-			$query     = $this->dbh->query("SELECT `UserID` FROM `User` WHERE `VerifyToken` = '$verifyToken'");
+			$query = $this->dbh->query("SELECT `UserID` FROM `User` WHERE `VerifyToken` = '$verifyToken'");
 			
 			$response = $query->fetch_assoc();
             $statusCode = 200;
@@ -183,16 +182,16 @@ class RestFulApi {
 				$result = $this->dbh->affected_rows;
 				
 				if($result > 0){
-					$response = mysqli_fetch_all($query,MYSQLI_ASSOC);
-					$verifyToken  = $response[0]['VerifyToken'];
-					$email 		  = $response[0]['Email'];
-					
-					//Send email
-					$this->sendEmail($email,$verifyToken);die;	
+					$result = $query->fetch_all(MYSQLI_ASSOC);
 
-			    // $response = array('status' => "Please check your email for verification.");
-        //         	$statusCode = 200;
-        //         	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+					$verifyToken  = $result[0]['VerifyToken'];
+					$email 		  = $result[0]['Email'];
+					//Send email
+					$this->sendEmail($email,$verifyToken);	
+
+			    	$response = array('status' => "Please check your email for verification.");
+                	$statusCode = 200;
+                	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
 				}
 				else{
 					$statusCode = 200;
@@ -255,40 +254,51 @@ class RestFulApi {
     	$userId = intval($this->escapeString($updateData['userinfo']['userID']));
     	
     	if($userId != 0){
-	    	$sql   = "UPDATE `User` SET";
-			$comma   = " ";
-			$updateList = array(
-			    "firstName" => "`FirstName`",
-			    "lastName"  => "`LastName`",
-			    "phoneNo"   => "`Phone`",
-			    "image"     => "`ProfileImagePath`",
-			    "country"   => "`CountryID`",
-			    "language"  => "`Language`"
-			);
-			
-			foreach($updateData['userinfo'] as $key => $value) {
-			    if( ! empty($value) && array_key_exists($key, $updateList)) {
-			       $sql .= $comma . $updateList[$key] . " = '" . $this->escapeString($value) . "'";		       
-			       $comma = ", ";		        
-			    }
-			}
+    		//Check if empty datas
+    		function emptyArray($array){
+    			if(empty($array)) return true;
+    		}
+			$checkArray = array_filter($updateData['userinfo'],'emptyArray');
+    		if(count($checkArray) < 6) {
+			    	$sql   = "UPDATE `User` SET";
+					$comma   = " ";
+					$updateList = array(
+					    "firstName" => "`FirstName`",
+					    "lastName"  => "`LastName`",
+					    "phoneNo"   => "`Phone`",
+					    "image"     => "`ProfileImagePath`",
+					    "country"   => "`CountryID`",
+					    "language"  => "`Language`"
+					);
+					
+					foreach($updateData['userinfo'] as $key => $value) {
+					    if( ! empty($value) && array_key_exists($key, $updateList)) {
+					       $sql .= $comma . $updateList[$key] . " = '" . $this->escapeString($value) . "'";		       
+					       $comma = ", ";		        
+					    }
+					}
 
-			$comma = " ";
-			$sql .= $comma."WHERE `UserID` = $userId";
-			
-			$query  = $this->dbh->query($sql);
-			$result = $this->dbh->affected_rows;
-		
-			if($result > 0){
-				$statusCode = 200;
-				$response = array('status' => "Selected fields updated successfully.");
-            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
-			} 
-			else {
+					$comma = " ";
+					$sql .= $comma."WHERE `UserID` = $userId";
+					$query  = $this->dbh->query($sql);
+					$result = $this->dbh->affected_rows;
+				
+					if($result > 0){
+						$statusCode = 200;
+						$response = array('status' => "Selected fields updated successfully.");
+		            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+					} 
+					else {
+						$statusCode = 400;
+						$response = array('status' => "Check UserID, phone number or language format (EN,RU).");
+		            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+					}
+				}
+			else{
 				$statusCode = 400;
-				$response = array('status' => "Check phone number or language format (EN,RU).");
-            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
-			}	
+				$response = array('status' => "Empty data.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+			}		
     	}
     	else {
     		$statusCode = 400;
@@ -329,11 +339,8 @@ class RestFulApi {
 		$result = $this->dbh->affected_rows;
 		
 		if($result > 0){
-			$result = array();
-			while($row = $query->fetch_assoc()){
-    			$result[] = $row;
-			}
-			$response = $this->mergeName($result);
+			$getResult = $query->fetch_all(MYSQLI_ASSOC);
+			$response = $this->mergeName($getResult);
 
 			$statusCode = 200;
             $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
@@ -353,10 +360,7 @@ class RestFulApi {
 		$result = $this->dbh->affected_rows;
 		
 		if($result > 0){
-			$response = array();
-			while($row = $query->fetch_assoc()){
-    			$response[] = $row;
-			}
+			$response = $query->fetch_all(MYSQLI_ASSOC);
 			$statusCode = 200;
             $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
 		}
@@ -373,8 +377,7 @@ class RestFulApi {
     public function SearchProductsByText(){
     	$serachText = $this->escapeString($_POST['serachText']);
     	$offset     = intval($this->escapeString($_POST['offset']));
-    	$limit      = intval($this->escapeString($_POST['limit']));
-    	echo $limit." ".$offset." ".$serachText;die; 
+    	$limit      = intval($this->escapeString($_POST['limit'])); 
     	
     	if($serachText != '' or !empty($serachText)){
 	    	$condition = "`IsPublished` = 1 AND `IsApproved` = 1 AND `LoyaltyRewardOnly` = 0 AND (`StockCount` > 0 OR `IsStockCount` = 0)";
@@ -383,11 +386,7 @@ class RestFulApi {
 			$result = $this->dbh->affected_rows;
 			
 			if($result > 0){
-				// $response = mysqli_fetch_all($query,MYSQLI_ASSOC);
-				$response = array();
-				while($row = $query->fetch_assoc()){
-	    			$response[] = $row;
-				}
+				$response = $query->fetch_all(MYSQLI_ASSOC);
 				$statusCode = 200;
 	            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
 			}
@@ -395,11 +394,7 @@ class RestFulApi {
 				$query = $this->dbh->query("SELECT `ProductName`, `ProductPrice`, `ProductCurrency`, `ProductSummaryDescription`,`FeatureImagePath` FROM `Product` WHERE `ProductName` NOT LIKE '%$serachText%' AND (`ProductSummaryDescription` LIKE '%$serachText%' OR `ProductDetailDescription` LIKE '%$serachText%') AND".$comma.$condition.$comma."LIMIT $limit OFFSET $offset");
 				$result = $this->dbh->affected_rows;
 				if($result > 0){
-					// $response = mysqli_fetch_all($query,MYSQLI_ASSOC);
-					$response = array();
-					while($row = $query->fetch_assoc()){
-		    			$response[] = $row;
-					}
+					$response = $query->fetch_all(MYSQLI_ASSOC);
 					$statusCode = 200;
 		            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
 				}
@@ -449,6 +444,81 @@ class RestFulApi {
     }
 
     /**
+     * Get All Theme
+     */
+    public function GetAllTheme(){
+    	$query = $this->dbh->query("SELECT `ProductThemeName`, `` 
+    								FROM `ProductTheme`");
+		$result = $this->dbh->affected_rows;
+		
+		if($result > 0){
+			$response = $query->fetch_all(MYSQLI_ASSOC);
+			$statusCode = 200;
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+		else {
+			$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		} 
+    }
+
+    /**
+     * Get Front Page Slide Show Products
+     */
+    public function GetFrontPageSlideShowProducts(){
+    	$query = $this->dbh->query("SELECT `ProductName`,`ProductPrice`,`ProductSummaryDescription`, `SlideshowImagePath`     FROM `Product`,`ProductSlideshow` 
+    								WHERE `ProductSlideshow`.`ProductID` = `Product`.`ProductID`");
+		$result = $this->dbh->affected_rows;
+		
+		if($result > 0){
+			$response = $query->fetch_all(MYSQLI_ASSOC);
+			$statusCode = 200;
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		}
+		else {
+			$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+		} 
+    }
+    
+    /**
+     * Get Number Of Coupons To Be Redeemed 
+     */
+    public function GetNumberOfCouponsToBeRedeemed(){
+    	$receiverID = intval($this->escapeString($_GET['id']));
+    	
+    	if($receiverID != 0 or !empty($receiverID)){
+    		$query = $this->dbh->query("SELECT `CouponID` FROM `Coupon` WHERE `ReceiverID` = $receiverID AND `IsRedeemed` = 0");
+			$result = $this->dbh->affected_rows;
+			
+			if($result > 0){
+				$statusCode = 200;
+            	$this->send_XML_JSON($result, $this->requestContentType, $statusCode);
+			}
+			else {
+				$statusCode = 400;
+				$response = array('status' => "Nothing found.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+			}
+    	}
+    	else {
+    		$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+    	}
+    }
+
+    /**
+     * Get Coupon By User
+     */
+    public function GetCouponByUser(){
+    	// SELECT `ProductName`,`ExpirationTime`,`SenderID`,`SendTimestamp`  FROM `Coupon` JOIN `Product` ON `Product`.ProductID = `Coupon`.ProductID WHERE `Coupon`.SenderID = 44 AND `Coupon`.IsRedeemed = 0 AND `Coupon`.IsRegifted = 0 AND (`Coupon`.`ExpirationTime` -now() <= 20) ORDER BY `ExpirationTime` ASC
+    }
+
+     
+    /**
      * Merge firstName and lastName
      * @param $array 
      * @return array 
@@ -493,10 +563,10 @@ class RestFulApi {
 	    $to      = $email;
 	    $subject = "Complate registration for Site name.";
 	    $from    = 'example@gmail.com';
-	    $message = 'For completing the registration please click on active URL <a href=/verify.php?verifyToken='.$verifyToken.'>Click here</a> .';
+	    $message = 'For completing the registration please click on active URL <a href=/restexample/verify.php?verifyToken='.$verifyToken.'>Click here</a> .';
 	    $headers = "From: <".$from.">";
-	    // mail($to,$subject,$message,$headers);
-	    echo $headers."<br>".$subject."<br>".$message;
+	    mail($to,$subject,$message,$headers);
+	    // echo $headers."<br>".$subject."<br>".$message;
     }
 
     /**

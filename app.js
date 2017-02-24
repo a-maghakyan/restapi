@@ -12,7 +12,8 @@ $(document).ready(function() {
             var imagePath = $("#imagePath").val();
         
         $.ajax({
-            url: "http://armdeveloper.hol.es/restexample/api/CreateUser",
+            // url: "http://armdeveloper.hol.es/restexample/api/CreateUser",
+            url: "http://localhost/restexample/api/CreateUser",
             type: 'POST',
             dataType: 'json',
             data:{firstname:firstname,lastname:lastname,password:password,email:email,phone:phone,language:language,countryId:countryId,imagePath:imagePath},
@@ -35,7 +36,8 @@ $(document).ready(function() {
         var verifyToken = $('#verifyToken').val();
             
             $.ajax({
-                url: "http://armdeveloper.hol.es/restexample/api/ActivateUser",
+                // url: "http://armdeveloper.hol.es/restexample/api/ActivateUser",
+                url: "http://localhost/restexample/api/ActivateUser",
                 type: 'POST',
                 dataType: 'json',
                 data:{verifyToken:verifyToken},
@@ -57,7 +59,8 @@ $(document).ready(function() {
         var userID = $('#userID').val();
             
         $.ajax({
-            url: "http://armdeveloper.hol.es/restexample/api/ResendKeyActivateUser",
+            // url: "http://armdeveloper.hol.es/restexample/api/ResendKeyActivateUser",
+            url: "http://localhost/restexample/api/ResendKeyActivateUser",
             type: 'POST',
             dataType: 'json',
             data:{userID:userID},
@@ -78,7 +81,8 @@ $(document).ready(function() {
         var userID   = $('#userIdVal').val();            
         var password = $('#passVal').val();           
             $.ajax({
-                url: "http://armdeveloper.hol.es/restexample/api/UserAuth",
+                // url: "http://armdeveloper.hol.es/restexample/api/UserAuth",
+                url: "http://localhost/restexample/api/UserAuth",
                 type: 'POST',
                 dataType: 'json',
                 data:{userID:userID,password:password},
@@ -114,7 +118,8 @@ $(document).ready(function() {
         userinfo.image     = image;
         
         $.ajax({
-            url: "http://armdeveloper.hol.es/restexample/api/UpdateUserInfo",
+            // url: "http://armdeveloper.hol.es/restexample/api/UpdateUserInfo",
+            url: "http://localhost/restexample/api/UpdateUserInfo",
             type: 'PUT',
             dataType: 'json',
             data:{userinfo:userinfo},            
@@ -135,7 +140,8 @@ $(document).ready(function() {
         var id = Number($(".method-id").val());
         if(method != ''){    
             $.ajax({
-                url: "http://armdeveloper.hol.es/restexample/api/"+method+"/"+id,
+                // url: "http://armdeveloper.hol.es/restexample/api/"+method+"/"+id,
+                url: "http://localhost/restexample/api/"+method+"/"+id,
                 type: 'GET',
                 dataType: 'json',
                 success: function (result) {
@@ -158,7 +164,8 @@ $(document).ready(function() {
         var offset = $("#offset").val();
         var limit  = $("#limit").val();
         $.ajax({
-            url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/SearchProductsByText",
             type: 'POST',
             dataType: 'json',
             data:{serachText:serachText,offset:offset,limit:limit},
@@ -172,6 +179,33 @@ $(document).ready(function() {
             error: function (error) {
                 console.log(error);
                 $("#search-result").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //getcoupon
+   $('#cupon').click(function(){
+        var userid = $("#couponuser").val();
+        var offset = $("#couponoffset").val();
+        // var limit  = $("#couponlimit").val();
+        var expireflag  = $("#ExpireFlag").val();
+        
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/GetCouponByUser",
+            type: 'POST',
+            dataType: 'json',
+            data:{userid:userid,offset:offset,expireflag:expireflag},
+            
+            success: function (result) {
+                console.log(result);
+                
+                $("#show-cupon").html(JSON.stringify(result));
+
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-cupon").html(JSON.stringify(error.responseText));  
             }
         });
    });
