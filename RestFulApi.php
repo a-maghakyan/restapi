@@ -1,9 +1,5 @@
 <?php 
-session_start();
-/**
- * A simple RESTful webservices base class
- * Use this as a template and build upon it
- */
+
 class RestFulApi {
 
 	/**
@@ -312,14 +308,10 @@ class RestFulApi {
      */
     public function GetUserInfoForMenu(){
 		$userId = intval($this->escapeString($_GET['id']));
-		$query = $this->dbh->query("SELECT `FirstName`, `LastName`, `ProfileImagePath`, `CountryName` 
-									FROM `User`,`Country` 
-									WHERE `UserID` = $userId AND `User`.`CountryID` = `Country`.`CountryID`");
+		$query = $this->dbh->query("SELECT CONCAT(`FirstName`,' ',`LastName`) AS fullName, `ProfileImagePath`, `CountryName` FROM `User`,`Country` WHERE `UserID` = $userId AND `User`.`CountryID` = `Country`.`CountryID`");
 		$result = $this->dbh->affected_rows;
 		if($result > 0){
-			$result = $query->fetch_assoc();
-			$response = $this->mergeName($result);
-			
+			$response = $query->fetch_assoc();
 			$statusCode = 200;
             $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
 		}
@@ -334,14 +326,12 @@ class RestFulApi {
      * Get User Detail Information 
      */
     public function GetUserDetailInfo(){
-    	$query = $this->dbh->query("SELECT `FirstName`, `LastName`, `ProfileImagePath`, `CountryName`, `Email`, `Phone` FROM `User`,`Country` WHERE `User`.`CountryID` = `Country`.`CountryID`");
+    	$query = $this->dbh->query("SELECT CONCAT(`FirstName`,' ',`LastName`) AS fullName, `ProfileImagePath`, `CountryName`, `Email`, `Phone` FROM `User`,`Country` WHERE `User`.`CountryID` = `Country`.`CountryID`");
 
 		$result = $this->dbh->affected_rows;
 		
 		if($result > 0){
-			$getResult = $query->fetch_all(MYSQLI_ASSOC);
-			$response = $this->mergeName($getResult);
-
+			$response = $query->fetch_all(MYSQLI_ASSOC);
 			$statusCode = 200;
             $this->send_XML_JSON($response, $this->requestContentType, $statusCode);
 		}
@@ -517,41 +507,149 @@ class RestFulApi {
     	// SELECT `ProductName`,`ExpirationTime`,`SenderID`,`SendTimestamp`  FROM `Coupon` JOIN `Product` ON `Product`.ProductID = `Coupon`.ProductID WHERE `Coupon`.SenderID = 44 AND `Coupon`.IsRedeemed = 0 AND `Coupon`.IsRegifted = 0 AND (`Coupon`.`ExpirationTime` -now() <= 20) ORDER BY `ExpirationTime` ASC
     }
 
-     
     /**
-     * Merge firstName and lastName
-     * @param $array 
-     * @return array 
+     * Get Coupon Detail
      */
-    public function mergeName($array){   	
-    	if( ! $this->isMultiArray($array)){
-    		$response = array("fullName" => "");
-			foreach($array as $key => $val){
-			    if($key == "FirstName" or $key == "LastName"){
-			        $response["fullName"] .= $val." ";
-			    }
-			    else{
-			       $response[$key] .= $val; 
-			    }
+    public function GetCouponDetail(){
+    	$couponID = intval($this->escapeString($_GET['id']));
+    	
+    	if($couponID != 0 or !empty($couponID)){
+    		$query = $this->dbh->query("SELECT `ProductName`, `ExpirationTime`, `QRSeed`, `ProductDetailDescription` 						 FROM `Coupon` JOIN `Product` ON `Product`.ProductID = `Coupon`.ProductID 							WHERE `CouponID` = $couponID AND `IsRedeemed` = 0 AND `IsRegifted` = 0");
+			$result = $this->dbh->affected_rows;
+			
+			if($result > 0){
+				$response = $query->fetch_assoc();	
+				$statusCode = 200;
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
 			}
-    		return $response;
+			else {
+				$statusCode = 400;
+				$response = array('status' => "Nothing found.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+			}
     	}
     	else {
-    		$response = array();
-    		$insideResponse = array("fullName" => '');
-    		foreach ($array as $value) {
-	    		foreach($value as $key => $val){
-				    if($key == "FirstName" or $key == "LastName"){
-				        $insideResponse["fullName"] .= $val." ";				        
-				    }
-				    else{
-				       	$insideResponse[$key] .= $val; 
-				    }	    
-				}
-				$response[] = $insideResponse;
-			    $insideResponse = array();
+    		$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+    	}	
+    }
+
+    /**
+     * Get Total Price 
+     */
+    public function GetTotalPrice(){
+    	$userid    = intval($this->escapeString($_POST['userid']));
+    	$productID = intval($this->escapeString(key($_POST['productAmount'])));
+    	$amount    = intval($this->escapeString($_POST['productAmount'][$productID]));
+    	
+    	if($userid != 0 or !empty($userid)){
+    		$query = $this->dbh->query("SELECT SUM(`ProductPrice`)*$amount AS total FROM `Product` WHERE `ProductID` = $productID");
+			$result = $this->dbh->affected_rows;
+			
+			if($result > 0){
+				$response = $query->fetch_assoc(); 
+				$statusCode = 200;
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
 			}
-			return $response;  		
+			else {
+				$statusCode = 400;
+				$response = array('status' => "Nothing found.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+			}
+    	}
+    	else {
+    		$statusCode = 400;
+			$response = array('status' => "Nothing found.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+    	}
+    }
+
+    /**
+     * Purchase Coupon 
+     */
+    public function PurchaseCoupon(){
+    	$userid     = intval($this->escapeString($_POST['userid']));
+    	$productID  = intval($this->escapeString($_POST['productID']));
+    	$phoneEmail = $this->escapeString($_POST['phoneEmail']);
+    	$message    = $this->escapeString($_POST['message']);
+
+    	if($userid != 0 && $productID !=0){
+    		$query = $this->dbh->query("INSERT INTO `Coupon`(`CouponID`, `ProductID`, `SenderID`, `ReceiverID`, `SendTimestamp`, `PublicKey`, `QRSeed`, `IsRedeemed`, `ReceiverDisplayName`, `PersonalMessage`, `IsRegifted`, `UsedTime`, `ExpirationTime`, `IsRead`) VALUES (null,$productID,$userid,$userid,null,'','',0,'','$message',0,null,null,0)");
+			$result = $this->dbh->affected_rows;
+			
+			if($result > 0){
+				$response = array('status' => "success"); 
+				$statusCode = 200;
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);
+			}
+			else {
+				$statusCode = 400;
+				$response = array('status' => "error");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+			}
+    	}
+    	else {
+    		$statusCode = 400;
+			$response = array('status' => "error");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+    	}	
+    }
+
+    /**
+     * Send Gift
+     */
+    public function SendGift(){
+    	$userid     = intval($this->escapeString($_POST['userid']));
+    	$couponID   = intval($this->escapeString($_POST['couponID']));
+    	$phone      = $this->escapeString($_POST['phone']);
+    	$email      = $this->escapeString($_POST['email']);
+    	$message    = $this->escapeString($_POST['message']);
+
+    	if($userid != 0 && $couponID !=0 && !empty($email) && !empty($phone)){
+    		//Get RecipientID
+    		$query = $this->dbh->query("SELECT `UserID` as `recipientID`, `ProductID` FROM `User`, `Coupon` WHERE `Email` = '$email' AND `Phone` = '$phone' AND `CouponID` = $couponID");
+			$result = $this->dbh->affected_rows;			
+			if($result > 0){
+				$response    = $query->fetch_assoc();
+				$recipientID = $response['recipientID'];
+				$productID   = $response['ProductID'];
+				
+				//Update Coupon IsRegifted = true
+				$query = $this->dbh->query("UPDATE `Coupon` SET `IsRegifted` = 1 WHERE `CouponID` = $couponID");
+				$result = $this->dbh->affected_rows;
+				if($result > 0){
+					//Insert new record in Coupon table 
+					$query = $this->dbh->query("INSERT INTO `Coupon`(`CouponID`, `ProductID`, `SenderID`, `ReceiverID`, `SendTimestamp`, `PublicKey`, `QRSeed`, `IsRedeemed`, `ReceiverDisplayName`, `PersonalMessage`, `IsRegifted`, `UsedTime`, `ExpirationTime`, `IsRead`) 
+						VALUES (null,$productID,$userid,$recipientID,null,'','',0,'','$message',0,null,null,0)");
+					$result = $this->dbh->affected_rows;
+					if($result > 0){
+						$statusCode  = 200;
+						$response = array('status' => "success"); 
+		            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);		
+					}
+					else {
+						$statusCode = 400;
+						$response = array('status' => "error");
+            			$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+					}
+				}
+				else {
+					$statusCode = 400;
+					$response = array('status' => "Check CouponID.");
+            		$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+				}
+			}
+			else {
+				$statusCode = 400;
+				$response = array('status' => "Check Phone, Email or CouponID.");
+            	$this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
+			}
+    	}
+    	else {
+    		$statusCode = 400;
+			$response = array('status' => "Empty Data.");
+            $this->send_XML_JSON($response, $this->requestContentType, $statusCode);	
     	}
     }
 
@@ -566,7 +664,6 @@ class RestFulApi {
 	    $message = 'For completing the registration please click on active URL <a href=/restexample/verify.php?verifyToken='.$verifyToken.'>Click here</a> .';
 	    $headers = "From: <".$from.">";
 	    mail($to,$subject,$message,$headers);
-	    // echo $headers."<br>".$subject."<br>".$message;
     }
 
     /**
@@ -587,33 +684,6 @@ class RestFulApi {
 	public function ErrorMessage($method){
 		echo json_encode(array("ErrorMessage"=>$method." mothod doesn't exists."));
 	}
-
-	// /**
-	//  * [GetFrontPageSlideShowProducts description]
-	//  * @param integer $id 
-	//  */
-	// public function GetFrontPageSlideShowProducts($id){
-	// 	if($id != 0){
-	// 		$query    = $this->dbh->query("SELECT * FROM test WHERE `id`=$id");
-	// 		$products = mysqli_fetch_all($query,MYSQLI_ASSOC);
-			
-	//    		if(empty($products)){
-	//    			$statusCode = 400;	
-	// 			$products = array('status' => 'No products found.','statusCode' => $statusCode);	
-	//    		} 
-	// 		else {
-	// 			$statusCode = 200;
-	// 		}
-
-	// 		$this->send_XML_JSON($products, $this->requestContentType, $statusCode);	
-	// 		$query->free();
-	// 	}
-	// 	else {
-	//    		$statusCode = 400;	
-	// 		$errorMessage = array("ErrorMessage" => '$UserID must not be 0.',"statusCode" => $statusCode);	
-	// 		$this->send_XML_JSON($errorMessage, $this->requestContentType, $statusCode);	
-	// 	}
-	// }
 
 	/**
 	 * @param  array $responseData  
@@ -682,6 +752,11 @@ class RestFulApi {
     	if(count($checkArray) > 0) return true;
 	}
 
+	/**
+	 * Set Http Headers 
+	 * @param string $contentType 
+	 * @param int $statusCode  
+	 */
 	public function setHttpHeaders($contentType, $statusCode){		
 		$statusMessage = $this -> getHttpStatusMessage($statusCode);
 		
@@ -689,6 +764,11 @@ class RestFulApi {
 		header("Content-Type:". $contentType);
 	}
 	
+	/**
+	 * Get Http Status Message
+	 * @param  int $statusCode 
+	 * @return string
+	 */
 	public function getHttpStatusMessage($statusCode){
 		$httpStatus = array(
 			100 => 'Continue',  

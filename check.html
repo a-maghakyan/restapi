@@ -146,7 +146,7 @@ Created functions are`
 
 <div class="panel panel-default">
   <!-- Default panel contents -->
-  <div class="panel-heading">GET Functions:GetUserInfoForMenu($UserID), GetUserDetailInfo, GetAllBrand, GetProductDetail($ProductID)</div>
+  <div class="panel-heading">GET Functions:GetUserInfoForMenu($UserID), GetUserDetailInfo, GetAllBrand, GetProductDetail($ProductID),GetNumberOfCouponsToBeRedeemed($UserID),GetCouponDetail($couponID)</div>
   <div class="panel-body">
 	<form class="form-inline" style="float:left;margin-right:20px;">
 		<div class="form-group">
@@ -227,6 +227,102 @@ Created functions are`
 
   </div>
 </div>
-	<script src="app.js"></script>
+
+<hr>
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">GetTotalPrice</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>UserID</label>
+			<input type="number" class="form-control " id="GetTotalPriceuser"  required>
+		</div>
+		<div class="form-group">
+			<label>ProductID</label>
+			<input type="number" class="form-control " id="GetTotalPriceID"  required>
+		</div>
+		<div class="form-group">
+			<label>Amount</label>
+			<input type="number" class="form-control " id="GetTotalPriceAmount"  required>
+		</div>
+	</form>
+	<button id="GetTotalPrice" class="btn btn-default">GetTotalPrice</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-GetTotalPrice">
+  	<!-- Show Result -->
+  </div>
+</div>
+
+<hr>
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">PurchaseCoupon</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>UserID</label>
+			<input type="number" class="form-control " id="PurchaseCouponuser"  required>
+		</div>
+		<div class="form-group">
+			<label>ProductID</label>
+			<input type="number" class="form-control " id="PurchaseCouponID"  required>
+		</div>
+		<div class="form-group">
+			<label>$Phone/$Email</label>
+			<input type="text" class="form-control " id="PurchaseCouponemail"  required>
+		</div>
+		<div class="form-group">
+			<label>$Message</label>
+			<input type="text" class="form-control " id="PurchaseCouponmessage"  required>
+		</div>
+	</form>
+	<button id="PurchaseCoupon" class="btn btn-default">PurchaseCoupon</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-PurchaseCoupon">
+  	<!-- Show Result -->
+  </div>
+</div>
+
+<hr>
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">SendGift</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>UserID</label>
+			<input type="number" class="form-control " id="SendGiftuser"  required style="width:65px;margin-right:10px;">
+		</div>
+		<div class="form-group">
+			<label>CouponID</label>
+			<input type="number" class="form-control " id="SendGiftID"  required style="width:65px;margin-right:20px;">
+		</div>
+		<div class="form-group">
+			<label>$Email</label>
+			<input type="text" class="form-control " id="SendGiftemail"  required>
+		</div>
+		<div class="form-group">
+			<label>$Phone</label>
+			<input type="text" class="form-control " id="SendGiftphone"  required>
+		</div>
+		
+		<div class="form-group">
+			<label>$Message</label>
+			<input type="text" class="form-control " id="SendGiftmessage"  required>
+		</div>
+	</form>
+	<button id="SendGift" class="btn btn-default">SendGift</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-SendGift">
+  	<!-- Show Result -->
+  </div>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>

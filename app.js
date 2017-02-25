@@ -199,13 +199,88 @@ $(document).ready(function() {
             
             success: function (result) {
                 console.log(result);
-                
                 $("#show-cupon").html(JSON.stringify(result));
-
             },
             error: function (error) {
                 console.log(error);
                 $("#show-cupon").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //GetTotalPrice
+   $('#GetTotalPrice').click(function(){
+        var userid = $("#GetTotalPriceuser").val();
+        var pID = Number($("#GetTotalPriceID").val());
+        var amount = $("#GetTotalPriceAmount").val();
+        //Passing ProductID as key and Amount as value
+        var productAmount  = {};
+        productAmount[pID] = amount;
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/GetTotalPrice",
+            type: 'POST',
+            dataType: 'json',
+            data:{userid:userid,productAmount:productAmount},
+            
+            success: function (result) {
+                console.log(result);
+                $("#show-GetTotalPrice").html(JSON.stringify(result));
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-GetTotalPrice").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //GetTotalPrice
+   $('#PurchaseCoupon').click(function(){
+        var userid = $("#PurchaseCouponuser").val();
+        var productID =$("#PurchaseCouponID").val();
+        var phoneEmail = $("#PurchaseCouponemail").val();
+        var message = $("#PurchaseCouponmessage").val();
+        //Passing ProductID as key and Amount as value
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/PurchaseCoupon",
+            type: 'POST',
+            dataType: 'json',
+            data:{userid:userid,productID:productID,phoneEmail:phoneEmail,message:message},
+            
+            success: function (result) {
+                console.log(result);
+                $("#show-PurchaseCoupon").html(JSON.stringify(result));
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-PurchaseCoupon").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //SendGift
+   $('#SendGift').click(function(){
+        var userid = $("#SendGiftuser").val();
+        var couponID = $("#SendGiftID").val();
+        var phone = $("#SendGiftphone").val();
+        var email = $("#SendGiftemail").val();
+        var message = $("#SendGiftmessage").val();
+        //Passing ProductID as key and Amount as value
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/SendGift",
+            type: 'POST',
+            dataType: 'json',
+            data:{userid:userid,couponID:couponID,phone:phone,email:email,message:message},
+            
+            success: function (result) {
+                console.log(result);
+                $("#show-SendGift").html(JSON.stringify(result));
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-SendGift").html(JSON.stringify(error.responseText));  
             }
         });
    });
