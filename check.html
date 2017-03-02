@@ -60,7 +60,7 @@ Created functions are`
 
 			<div class="form-group">
 				<label for="InputPhone">Phone</label>
-				<input type="text" name="phone" id="phone" class="form-control" placeholder="Enter phone here...">
+				<input type="number" name="phone" id="phone" class="form-control" placeholder="Enter phone here...">
 			</div>
 
 			<div class="form-group">
@@ -125,7 +125,7 @@ Created functions are`
 		<input type="text" name="lastname" id="lastNameUpdate" class="form-control" placeholder="Enter last name here..." >
 				
 		<label for="InputPhone">Phone</label>
-		<input type="text" name="phone" id="phoneUpdate" class="form-control" placeholder="Enter phone here...">
+		<input type="number" name="phone" id="phoneUpdate" class="form-control" placeholder="Enter phone here...">
 				
 		<label for="InputLanguage">Language</label>
 		<input type="text" name="language" id="languageUpdate" class="form-control" placeholder="Enter language here..." maxlength="2">
@@ -146,7 +146,7 @@ Created functions are`
 
 <div class="panel panel-default">
   <!-- Default panel contents -->
-  <div class="panel-heading">GET Functions:GetUserInfoForMenu($UserID), GetUserDetailInfo, GetAllBrand, GetProductDetail($ProductID),GetNumberOfCouponsToBeRedeemed($UserID),GetCouponDetail($couponID)</div>
+  <div class="panel-heading">GET Functions:GetUserInfoForMenu($UserID), GetUserDetailInfo, GetAllBrand, GetAllTheme, GetProductDetail($ProductID), GetNumberOfCouponsToBeRedeemed($UserID), GetCouponDetail($couponID)</div>
   <div class="panel-body">
 	<form class="form-inline" style="float:left;margin-right:20px;">
 		<div class="form-group">
@@ -271,10 +271,6 @@ Created functions are`
 			<input type="number" class="form-control " id="PurchaseCouponID"  required>
 		</div>
 		<div class="form-group">
-			<label>$Phone/$Email</label>
-			<input type="text" class="form-control " id="PurchaseCouponemail"  required>
-		</div>
-		<div class="form-group">
 			<label>$Message</label>
 			<input type="text" class="form-control " id="PurchaseCouponmessage"  required>
 		</div>
@@ -320,6 +316,138 @@ Created functions are`
   </div>
   <div class="panel-body" id="show-SendGift">
   	<!-- Show Result -->
+  </div>
+</div>
+
+<hr>
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">GetCompleteMessage</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>$UserID</label>
+			<input type="number" class="form-control " id="GetCompleteMessageuser"  required style="width:65px;margin-right:10px;">
+		</div>
+		<div class="form-group">
+			<label>$CouponID</label>
+			<input type="number" class="form-control " id="GetCompleteMessageID"  required style="width:65px;margin-right:20px;">
+		</div>
+		<div class="form-group">
+			<label>$RecipientID</label>
+			<input type="number" class="form-control " id="GetCompleteMessagerid"  required>
+		</div>
+	</form>
+	<button id="GetCompleteMessage" class="btn btn-default">SendGift</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-GetCompleteMessage">
+  	<!-- Show Result -->
+  </div>
+</div>
+<hr>
+
+<div class="panel panel-default">
+
+  <div class="panel-heading">SendRequest</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>$UserID</label>
+			<input type="number" class="form-control " id="SendRequestuser"  required style="width:65px;margin-right:10px;">
+		</div>
+		<div class="form-group">
+			<label>$ProductID</label>
+			<input type="number" class="form-control " id="SendRequestID"  required style="width:65px;margin-right:20px;">
+		</div>
+		<div class="form-group">
+			<label>$RecipientID</label>
+			<input type="number" class="form-control " id="SendRequestrid"  required>
+		</div>
+		<div class="form-group">
+			<label>$Message</label>
+			<input type="text" class="form-control " id="SendRequestmessage"  required>
+		</div>
+	</form>
+	<button id="SendRequest" class="btn btn-default">SendRequest</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-SendRequest">
+  	<!-- Show Result -->
+  </div>
+</div>
+
+<hr>
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">ListGiftRequests($UserID,$Offset, $Limit = 10)</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>UserID</label>
+			<input type="number" class="form-control " id="ListGiftRequestsuser"  required>
+		</div>
+		<div class="form-group">
+			<label>Offset</label>
+			<input type="number" class="form-control " id="ListGiftRequestsoffset" >
+		</div>
+		<div class="form-group">
+			<label>Limit</label>
+			<input type="number" class="form-control " id="ListGiftRequestslimit" >
+		</div>
+	</form>
+	<button id="ListGiftRequests" class="btn btn-default">ListGiftRequests</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-ListGiftRequests">
+  	<!-- Show Result -->
+
+  </div>
+</div>
+<hr>
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">DeleteGiftRequest($UserID)</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>$RequestID</label>
+			<input type="number" class="form-control " id="DeleteGiftRequestuser"  required>
+		</div>
+	</form>
+	<button id="DeleteGiftRequest" class="btn btn-default">DeleteGiftRequest</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-DeleteGiftRequest">
+  	<!-- Show Result -->
+
+  </div>
+</div>
+<hr>
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">UpdateUserPhoneSendConfirmationCode($UserID,$Phone)</div>
+  <div class="panel-body">
+	<form class="form-inline" style="float:left;margin-right:20px;">
+		<div class="form-group">
+			<label>$UserID</label>
+			<input type="number" class="form-control " id="UpdateUserPhoneuser" required>
+		</div>
+		<div class="form-group">
+			<label>$Pnone</label>
+			<input type="number" class="form-control " id="UpdateUserPhonephone"  required>
+		</div>
+	</form>
+	<button id="UpdateUserPhone" class="btn btn-default">Send Confirmation Code (SMS)</button>
+	<div class="clearfix"></div>
+  </div>
+  <div class="panel-body" id="show-UpdateUserPhone">
+  	<!-- Show Result -->
+
   </div>
 </div>
 

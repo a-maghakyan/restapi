@@ -146,7 +146,6 @@ $(document).ready(function() {
                 dataType: 'json',
                 success: function (result) {
                     console.log(result);
-                    
                     $("#show-result").html(JSON.stringify(result));
 
                 },
@@ -234,19 +233,19 @@ $(document).ready(function() {
         });
    });
 
-   //GetTotalPrice
+   //PurchaseCoupon
    $('#PurchaseCoupon').click(function(){
         var userid = $("#PurchaseCouponuser").val();
         var productID =$("#PurchaseCouponID").val();
-        var phoneEmail = $("#PurchaseCouponemail").val();
         var message = $("#PurchaseCouponmessage").val();
+
         //Passing ProductID as key and Amount as value
         $.ajax({
             // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
             url: "http://localhost/restexample/api/PurchaseCoupon",
             type: 'POST',
             dataType: 'json',
-            data:{userid:userid,productID:productID,phoneEmail:phoneEmail,message:message},
+            data:{userid:userid,productID:productID,message:message},
             
             success: function (result) {
                 console.log(result);
@@ -285,4 +284,158 @@ $(document).ready(function() {
         });
    });
 
+  //GetCompleteMessage
+   $('#GetCompleteMessage').click(function(){
+        var userID      = $("#GetCompleteMessageuser").val();
+        var couponID    = $("#GetCompleteMessageID").val();
+        var recipientID = $("#GetCompleteMessagerid").val();
+        
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/GetCompleteMessage",
+            type: 'POST',
+            dataType: 'json',
+            data:{userID:userID,couponID:couponID,recipientID:recipientID},          
+            success: function (result) {
+                console.log(result);
+                $("#show-GetCompleteMessage").html(JSON.stringify(result));
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-GetCompleteMessage").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+    //SendRequest
+   $('#SendRequest').click(function(){
+        var userID      = $("#SendRequestuser").val();
+        var productID   = $("#SendRequestID").val();
+        var recipientID = $("#SendRequestrid").val();
+        var message     = $("#SendRequestmessage").val();
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/SendRequest",
+            type: 'POST',
+            dataType: 'json',
+            data:{userID:userID,productID:productID,recipientID:recipientID,message:message},          
+            success: function (result) {
+                console.log(result);
+                $("#show-SendRequest").html(JSON.stringify(result));
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-SendRequest").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //ListGiftRequests
+   $('#ListGiftRequests').click(function(){
+        var userID = $("#ListGiftRequestsuser").val();
+        var offset = $("#ListGiftRequestsoffset").val();
+        var limit  = $("#ListGiftRequestslimit").val();
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/ListGiftRequests",
+            type: 'POST',
+            dataType: 'json',
+            data:{userID:userID,offset:offset,limit:limit},          
+            success: function (result) {
+                console.log(result);
+                $("#show-ListGiftRequests").html(JSON.stringify(result));
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-ListGiftRequests").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //DeleteGiftRequest
+   $('#DeleteGiftRequest').click(function(){
+        var requestID = $("#DeleteGiftRequestuser").val();   
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/DeleteGiftRequest",
+            type: 'DELETE',
+            dataType: 'json',
+            data:{requestID:requestID},          
+            success: function (result) {
+                console.log(result);
+                $("#show-DeleteGiftRequest").html(JSON.stringify(result));
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-DeleteGiftRequest").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //UpdateUserPhone
+   $('#UpdateUserPhone').click(function(){
+        var userID = $("#UpdateUserPhoneuser").val();   
+        var phone  = $("#UpdateUserPhonephone").val();   
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/UpdateUserPhoneSendConfirmationCode",
+            type: 'POST',
+            dataType: 'json',
+            data:{userID:userID,phone:phone},          
+            success: function (result) {
+                console.log(result);
+                $("#show-UpdateUserPhone").html(JSON.stringify(result));
+                window.location.replace("http://localhost/restexample/confirm_phone.php");
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-UpdateUserPhone").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //UpdateUserPhoneTestConfirmationCode
+   $('#activatephone').click(function(){
+        var userID      = $("#verifyUser").val();
+        var phone       = $("#verifyPhone").val();
+        var confirmCode = $("#verifyCode").val();
+
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/SearchProductsByText",
+            url: "http://localhost/restexample/api/UpdateUserPhoneTestConfirmationCode",
+            type: 'POST',
+            dataType: 'json',
+            data:{userID:userID,confirmCode:confirmCode,phone:phone},          
+            success: function (result) {
+                console.log(result);
+                $("#show-phone").html(JSON.stringify(result));
+                $('#update-phnoe').css('display','block');
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-phone").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
+
+   //UpdateUserPhone
+   $('#updatephonebutton').click(function(){
+        var userID = $("#updateUser1").val();
+        var phone  = $("#updatePhone").val();
+        $.ajax({
+            // url: "http://armdeveloper.hol.es/restexample/api/UpdateUserPhone",
+            url: "http://localhost/restexample/api/UpdateUserPhone",
+            type: 'POST',
+            dataType: 'json',
+            data:{userID:userID,phone:phone},          
+            success: function (result) {
+                console.log(result);
+                $("#show-update").html(JSON.stringify(result));
+            },
+            error: function (error) {
+                console.log(error);
+                $("#show-update").html(JSON.stringify(error.responseText));  
+            }
+        });
+   });
 });
